@@ -16,6 +16,12 @@ We try to build our question answering system by mimic the human process of answ
 
 ### Question Classification
 
+The whole process in this stage can be divided as follows:
+
+* obtain the actual question partly in the question sentence;
+* excludes the stop words from the string;
+* for “when”, “who” and “where”, an answer type can be defined; for “what”, “how” or even there is no question words, extract the nearest word to question word to classify this question to the “when”, “who”, “where”, “number”, and “description”;
+
 We classify the question types base on the question words in the sentence and define six types of question that exist in our training dataset as explained below. If there were multiple question words exist in our question sentence, for example, clauses that start with question words, we use StanfordCoreNLP package to identify the clauses (will be label as SBAR in Part-Of-Speech (POS) tag parsing). Then we exclude the clauses’ token from the original question sentence and only focus on the rest of the tokens. As the example shown below, only “, what form of government did it adopt?” would be our question string. 
 
 Question type | Definition
@@ -27,4 +33,32 @@ Number | Question asking number, money etc. (question words include: how much, h
 Description | Question asking description, feeling etc. (question words include: what, how)
 Binary | Question does not contain any question words. E.g.  Name a reason that…
 
-![Sentence POS Tagging]()
+![Sentence POS Tagging](https://github.com/gaoxiangyu369/Question_Answering_QA_System/blob/master/images/Picture2.png)
+
+### Information Retrieval
+
+* locate the most related context using bi-gram TFIDF;
+* choose the top ten sentences that are similar to the question by sorting via cosine similarity between question and each sentence in the corresponded matrix;
+* use Named Entity Recognition (NER) to remove sentences that do not contain the corresponding answer entity;
+
+Question type | Expected answer entity (in spaCy’s NER form)
+------------ | -------------
+When | DATE, TIME
+Where | FAC, ORG, GPE, LOC
+Who | PERSON, NORP, ORG, PRODUCT
+Number | PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL
+
+### Answer Extraction
+
+* use dependence parsing to find the keywords' children token in the sentence where the keywords are the non-stop words from the question;
+* for a question that expects a clear answer type (for example, when, who, where and number), only return the corresponded entity token from the children token;
+* for unknown answer type, return all of the NOUN and PROPN words from the children token since most of the question would be asking for noun words in the develop dataset;
+* exclude all the duplicate token in the answer that already exist in the question sentences as final answer;
+
+## Metrics
+
+We use the (micro-averaged) F1 score to evaluate the model accuracy. The prediction and ground truth are treated as the bag of case-insensitive tokens ignoring punctuation and stop words. Then, the metric is calculated globally by counting the total true positives, false negatives and false positives
+
+## Conculsion
+
+Our approach has ranked our team 21st out of 167 teams.
